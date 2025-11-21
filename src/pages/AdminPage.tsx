@@ -1,11 +1,10 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
-import client from '../api/client'
 import type { SafeUser, UserRole } from '../types/user'
+import { UsersService } from '../services/userService'
 
 type CreateUserForm = { name: string; email: string; password: string; role: UserRole }
 
 const initialForm: CreateUserForm = { name: '', email: '', password: '', role: 'USER' }
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function AdminPage() {
   const [users, setUsers] = useState<SafeUser[]>([])
@@ -17,8 +16,7 @@ function AdminPage() {
   const fetchUsers = async () => {
     setLoading(true)
     try {
-      const response = await client.get<{ users: SafeUser[] }>('/users')
-      const list = response.data?.users || []
+      const list = await UsersService.fetchUsers()
       setUsers(list)
       setError('')
     } catch (err: unknown) {
@@ -44,18 +42,18 @@ function AdminPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setSubmitting(true)
-    if (!EMAIL_REGEX.test(form.email)) {
+    if (!UsersService.isValidEmail(form.email)) {
       alert('Введіть коректний email')
       setSubmitting(false)
       return
     }
-    if (form.password.length < 6) {
+    if (!UsersService.isStrongPassword(form.password)) {
       alert('Пароль має містити щонайменше 6 символів')
       setSubmitting(false)
       return
     }
     try {
-      await client.post('/auth/register', form)
+      await UsersService.createUser(form)
       setForm(initialForm)
       await fetchUsers()
     } catch (err: unknown) {
@@ -81,7 +79,7 @@ function AdminPage() {
       return
     }
     try {
-      await client.delete(`/users/${targetId}`)
+      await UsersService.deleteUser(targetId)
       await fetchUsers()
     } catch (err: unknown) {
       console.error('Failed to delete user', err)
@@ -179,6 +177,7 @@ function AdminPage() {
               value={form.email}
               onChange={handleChange}
               required
+              pattern={UsersService.emailPattern.source}
               placeholder="user@example.com"
             />
           </label>

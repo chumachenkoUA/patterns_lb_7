@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { UsersService } from '../services/userService'
 
 type LoginForm = { email: string; password: string }
 type RegisterForm = { name: string; email: string; password: string }
@@ -12,8 +13,6 @@ type Props = {
 }
 
 type AuthMode = 'login' | 'register'
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function AuthPage({ loading, error, onLogin, onRegister, onClearError }: Props) {
   const [mode, setMode] = useState<AuthMode>('login')
@@ -34,11 +33,11 @@ function AuthPage({ loading, error, onLogin, onRegister, onClearError }: Props) 
   const handleLoginSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setFormError('')
-    if (!EMAIL_REGEX.test(loginForm.email)) {
+    if (!UsersService.isValidEmail(loginForm.email)) {
       setFormError('Введіть коректний email')
       return
     }
-    if (loginForm.password.length < 6) {
+    if (!UsersService.isStrongPassword(loginForm.password)) {
       setFormError('Пароль має містити щонайменше 6 символів')
       return
     }
@@ -48,11 +47,11 @@ function AuthPage({ loading, error, onLogin, onRegister, onClearError }: Props) 
   const handleRegisterSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setFormError('')
-    if (!EMAIL_REGEX.test(registerForm.email)) {
+    if (!UsersService.isValidEmail(registerForm.email)) {
       setFormError('Введіть коректний email')
       return
     }
-    if (registerForm.password.length < 6) {
+    if (!UsersService.isStrongPassword(registerForm.password)) {
       setFormError('Пароль має містити щонайменше 6 символів')
       return
     }
@@ -128,8 +127,8 @@ function AuthPage({ loading, error, onLogin, onRegister, onClearError }: Props) 
           <label>
             Email
             <input
-              type="email"
-              pattern={EMAIL_REGEX.source}
+             type="email"
+              pattern={UsersService.emailPattern.source}
               value={registerForm.email}
               onChange={(event: ChangeEvent<HTMLInputElement>) =>
                 setRegisterForm((prev) => ({ ...prev, email: event.target.value }))
