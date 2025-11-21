@@ -13,6 +13,8 @@ type Props = {
 
 type AuthMode = 'login' | 'register'
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 function AuthPage({ loading, error, onLogin, onRegister, onClearError }: Props) {
   const [mode, setMode] = useState<AuthMode>('login')
   const [loginForm, setLoginForm] = useState<LoginForm>({ email: '', password: '' })
@@ -21,19 +23,39 @@ function AuthPage({ loading, error, onLogin, onRegister, onClearError }: Props) 
     email: '',
     password: '',
   })
+  const [formError, setFormError] = useState('')
 
   const switchMode = (next: AuthMode) => {
     setMode(next)
     onClearError()
+    setFormError('')
   }
 
   const handleLoginSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    setFormError('')
+    if (!EMAIL_REGEX.test(loginForm.email)) {
+      setFormError('Введіть коректний email')
+      return
+    }
+    if (loginForm.password.length < 6) {
+      setFormError('Пароль має містити щонайменше 6 символів')
+      return
+    }
     await onLogin(loginForm)
   }
 
   const handleRegisterSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    setFormError('')
+    if (!EMAIL_REGEX.test(registerForm.email)) {
+      setFormError('Введіть коректний email')
+      return
+    }
+    if (registerForm.password.length < 6) {
+      setFormError('Пароль має містити щонайменше 6 символів')
+      return
+    }
     await onRegister(registerForm)
   }
 
@@ -107,6 +129,7 @@ function AuthPage({ loading, error, onLogin, onRegister, onClearError }: Props) 
             Email
             <input
               type="email"
+              pattern={EMAIL_REGEX.source}
               value={registerForm.email}
               onChange={(event: ChangeEvent<HTMLInputElement>) =>
                 setRegisterForm((prev) => ({ ...prev, email: event.target.value }))
@@ -118,6 +141,7 @@ function AuthPage({ loading, error, onLogin, onRegister, onClearError }: Props) 
             Пароль
             <input
               type="password"
+              minLength={6}
               value={registerForm.password}
               onChange={(event: ChangeEvent<HTMLInputElement>) =>
                 setRegisterForm((prev) => ({
@@ -133,7 +157,7 @@ function AuthPage({ loading, error, onLogin, onRegister, onClearError }: Props) 
           </button>
         </form>
       )}
-      {error && <p className="error">{error}</p>}
+      {(formError || error) && <p className="error">{formError || error}</p>}
     </div>
   )
 }

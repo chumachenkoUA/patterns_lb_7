@@ -61,7 +61,6 @@ function App() {
     setAuthLoading(true)
     try {
       await client.post('/auth/register', payload)
-      // Після реєстрації одразу логінимося
       const { data } = await client.post<{ token: string; user: SafeUser }>(
         '/auth/login',
         {

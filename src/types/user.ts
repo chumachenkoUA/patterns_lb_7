@@ -8,6 +8,5 @@ export type SafeUser = {
   role: UserRole
   createdAt?: Date
   updatedAt?: Date
-  // підтримуємо старий snake_case для сумісності, якщо бекенд поверне public_id
   public_id?: string
 }

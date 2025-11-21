@@ -5,6 +5,7 @@ import type { SafeUser, UserRole } from '../types/user'
 type CreateUserForm = { name: string; email: string; password: string; role: UserRole }
 
 const initialForm: CreateUserForm = { name: '', email: '', password: '', role: 'USER' }
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function AdminPage() {
   const [users, setUsers] = useState<SafeUser[]>([])
@@ -43,6 +44,16 @@ function AdminPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setSubmitting(true)
+    if (!EMAIL_REGEX.test(form.email)) {
+      alert('Введіть коректний email')
+      setSubmitting(false)
+      return
+    }
+    if (form.password.length < 6) {
+      alert('Пароль має містити щонайменше 6 символів')
+      setSubmitting(false)
+      return
+    }
     try {
       await client.post('/auth/register', form)
       setForm(initialForm)
